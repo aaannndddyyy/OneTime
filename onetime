@@ -168,9 +168,7 @@ import random
 #          head fuzz), and the plaintext message. 
 #          
 #          The purpose of this digest is to verify message integrity
-#          and authenticity without revealing anything about the pad 
-#          (because we don't want an attacker to be able to analyze 
-#          whether the pad itself might have any weaknesses).  
+#          and authenticity.  
 #          Using a combined digest means that even in the case when 
 #          an attacker is in possession of the plaintext, there is no 
 #          plaintext substitution attack, because the attacker would 
@@ -199,10 +197,11 @@ import random
 # places that could potentially expose such raw pad bytes, we don't:
 #
 #   1) To calculate the pad ID (which is recorded in the file
-#      ~/.onetime/pad-records, which we have to assume could get
-#      exposed to an attacker), we use the hexadecimal digest of a
-#      SHA256 hash of some bytes from the front of the pad, instead of
-#      just using a hex representation of those bytes in raw form.
+#      ~/.onetime/pad-records and sent in clear with the encrypted message, 
+#      so we have to assume that it gets exposed to an attacker), we use 
+#      the hexadecimal digest of a SHA256 hash of some bytes from the 
+#      front of the pad, instead of just using a hex representation of 
+#      those bytes in raw form.
 #
 #   2) When inserting head fuzz and tail fuzz into the encrypted
 #      message, we don't just use raw pad bytes, but rather XOR raw
