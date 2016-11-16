@@ -120,6 +120,9 @@ import random
 #          that the final message digest authenticates the pad as well
 #          as the plaintext.  (The actual number of bytes used is
 #          PadSession._digest_source_length.)
+#          TODO: WHY do they need to be sent in the message at all, 
+#                if the receiver is already in possession of
+#                the same pad and can read them locally?! Same for H,T
 # 
 #   *  ==  a random number of fuzz bytes (head fuzz or tail fuzz):
 # 
@@ -158,18 +161,23 @@ import random
 #
 #   D  ==  32 bytes of digest
 #
-#          A SHA256 digest, XOR'd with pad, of: the raw pad session
+#          A SHA256 digest (XOR'd with pad) of: the raw pad session
 #          hash input bytes, plus the raw head fuzz (that is, the
-#          random bytes from *before* they were XOR'd with the pad to
-#          produce the final head fuzz), plus the plaintext message. 
+#          random bytes not coming from the the pad 
+#          (*before* they were XOR'd with the pad to produce the final
+#          head fuzz), and the plaintext message. 
 #          
-#          The purpose of this digest verify message integrity without
-#          revealing anything about the pad (because we don't want an
-#          attacker to be able to analyze whether the pad itself might
-#          have any weaknesses).  Using a combined digest means that
-#          even in the case of a known plaintext there is no plaintext
-#          substitution attack and no way to recover any of the raw
-#          pad bytes.
+#          The purpose of this digest is to verify message integrity
+#          and authenticity without revealing anything about the pad 
+#          (because we don't want an attacker to be able to analyze 
+#          whether the pad itself might have any weaknesses).  
+#          Using a combined digest means that even in the case when 
+#          an attacker is in possession of the plaintext, there is no 
+#          plaintext substitution attack, because the attacker would 
+#          need to know the pad in order to be able to calculate the 
+#          correct digest which in turn they need for finding the part 
+#          of the pad for XOR'ing with the new digest after substitution.
+#          Moreover, there is no way to recover any of the raw pad bytes. <---- TODO: How would not having it in the digest, disclose raw pad data?
 #
 #   (Note that this is not a hexadecimal representation of the hash;
 #   to save space, it is the raw hash digest.  However, any integrity
@@ -642,6 +650,7 @@ but it still needs to be a new object due to certain initializations)."""
 
   # Number of contiguous raw pad bytes to use as the source
   # material for the digest computed in self._session_hash.
+  # Using this is vital for countering the known-plaintext attack
   _digest_source_length = 32
 
   def __init__(self, pad_path, config_area=None, 
@@ -925,9 +934,9 @@ must be used for all subsequent calls with that instance.
     # using the data itself (expressed in hexadecimal) as the pad ID?
     # The answer is just tradition, really.  Well, and the very slight
     # possibility that if there's *something* not quite random about
-    # the pad, even though that's bad, we can at least avoid revealing
-    # that fact by exposing the first 32 bytes of the pad.  If a
-    # pad-records file gets leaked, that shouldn't show anything of
+    # the pad, even though that's bad, but by not exposing the first 32
+    # bytes of the pad at least we can avoid revealing that fact.
+    # If a pad-records file gets leaked, that shouldn't show anything of
     # interest about the pad itself, only about how much the pad has
     # been used.
     saved_posn = self.padfile.tell()
@@ -945,7 +954,7 @@ must be used for all subsequent calls with that instance.
     it would have been needlessly spendy if OneTime 1.x had been
     paranoid enough to not use any of those bytes for encryption.
     Version 2.0 fixed this, reducing the number of bytes used on ID but
-    also making they are not used for encryption."""
+    also making sure that they are not used for encryption."""
     saved_posn = self.padfile.tell()
     self.padfile.seek(0)
     sha1 = hashlib.sha1()
