@@ -1829,17 +1829,25 @@ def main():
   # about pad usage patterns and thus about past communications.
 
   if encrypting:
-    output.write(onetime_header)
+    header_written = False
+    if not output == sys.stdout:
+      output.write(onetime_header)
+      header_written = True
     encoder = SessionEncoder(pad_sess)
     while 1:
       string = incoming.read(8192)
       if len(string) > 0:
         result = encoder.encode(string)
         if result:
+          if not header_written:
+            output.write(onetime_header)
+            header_written = True
           output.write(result)
       else:
         result = encoder.finish()
         if result:
+          if not header_written:
+            output.write(onetime_header)
           output.write(result)
         break
     output.write("\n")
