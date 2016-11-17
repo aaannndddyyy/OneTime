@@ -128,11 +128,9 @@ import random
 # 
 #          These bytes are among the data fed to the session hash, so
 #          that the final message digest authenticates the pad as well
-#          as the plaintext.  (The actual number of bytes used is
-#          PadSession._digest_source_length.)
-#          TODO: WHY do they need to be sent in the message at all, 
-#                if the receiver is already in possession of
-#                the same pad and can read them locally?! Same for H,T
+#          as the plaintext. This is needed to counter plaintext-substitution 
+#          attack.
+#          (The actual number of bytes used is PadSession._digest_source_length.)
 # 
 #   *  ==  a random number of fuzz bytes (head fuzz or tail fuzz):
 # 
@@ -172,10 +170,10 @@ import random
 #   D  ==  32 bytes of digest
 #
 #          A SHA256 digest (XOR'd with pad) of: the raw pad session
-#          hash input bytes, plus the raw head fuzz (that is, the
-#          random bytes not coming from the the pad 
-#          (*before* they were XOR'd with the pad to produce the final
-#          head fuzz), and the plaintext message. 
+#          hash input bytes (R), plus the raw head fuzz (that is, the
+#          random bytes not coming from the the pad (*before* they 
+#          were XOR'd with the pad to produce the final head fuzz), 
+#          and the plaintext message. 
 #          
 #          The purpose of this digest is to verify message integrity
 #          and authenticity.  
