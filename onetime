@@ -88,11 +88,21 @@ import random
 # after the core data, there's some bookkeeping, all base64-encoded.
 # Here's a diagram, with index increasing from left to right:
 #
-#   FFHHTTRRRR******-------------------------------------DDDD*******
+#   FF******-------------------------------------DDDD*******
 #
+# This is what the encrypted part of the message looks like.
+# Nothing else is included.
 # The precise number of same characters in a row is not significant
 # above, except as a rough guide to the relative lengths of the 
-# different sections.  This is what the different sections mean:
+# different sections.
+# However in the process of decryption, more than just this information
+# is read. The actual process can be better illustrated by this diagram:
+#   FFHHTTRRRR******-------------------------------------DDDD*******
+# 
+# The additional entries here are not actually included in the ciphertext; 
+# they are just read from the respective pad at encryption and decryption time.
+#
+# This is what the different sections mean:
 #
 #   F  ==  a few format indicator bytes:
 #
